@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kube-scan.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "kube-scan.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kube-scan.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kube-scan.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: "{{ .Chart.Name }}-ui"
+          image: {{ .Values.image.frontend }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: API_SERVER_PORT
+              value: "{{ .Values.environment.port}}"
+            - name: CONTACT_LINK
+              value: "{{ .Values.environment.contactlink}}"
+            - name: WEBSITE_LINK
+              value: "{{ .Values.environment.websitelink}}"
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image.backend }}
+          env:
+            - name: KUBESCAN_PORT
+              value: "{{ .Values.environment.port}}"
+            - name: KUBESCAN_RISK_CONFIG_FILE_PATH
+              value: "{{ .Values.environment.riskfilepath}}"
+            - name: KUBESCAN_REFRESH_STATE_INTERVAL_MINUTES
+              value: "{{ .Values.environment.refreshinterval}}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: "{{ .Chart.Name }}-config"
+              mountPath: /etc/kubescan
+      volumes:
+        - name: "{{ .Chart.Name }}-config"
+          configMap:
+            name: {{ .Chart.Name }}
+            defaultMode: {{ .Values.configMap.defaultMode }}
+      serviceAccountName: {{ include "kube-scan.fullname" . }}

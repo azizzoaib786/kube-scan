@@ -1,0 +1,21 @@
+namespace: default
+replicaCount: 1
+
+image:
+  frontend: octarinesec/kubescan-scanner-ui:20.1.1
+  backend: octarinesec/kubescan-scanner:20.1.1
+  pullPolicy: Always
+
+environment:
+  port: 80
+  contactlink: mailto:info@octarinesec.com?subject=Octarine%20Contact%20Request
+  websitelink: https://www.octarinesec.com
+  riskfilepath: /etc/kubescan/risk-config.yaml
+  refreshinterval: 1440
+
+configMap:
+  defaultMode: 420
+
+service:
+  type: ClusterIP
+  targetport: 8080
